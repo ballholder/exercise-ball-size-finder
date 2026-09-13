@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Exercise Ball Size Finder — pick the right diameter for your height</title>
+<meta name="description" content="A small open-source calculator: enter your height and how you'll use the ball, get the exact diameter in cm plus the wall-tape mark to inflate to.">
+<style>
+  :root{
+    --bg:#f7f7f5; --card:#fff; --ink:#1a1a18; --muted:#6b6b64;
+    --line:#e3e3dd; --accent:#1f7a4d; --accent-soft:#e8f3ed; --warn:#b06a10; --warn-soft:#fbf1e2;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#16171a; --card:#1e2024; --ink:#ececea; --muted:#9a9a94;
+      --line:#2e3137; --accent:#4ec38a; --accent-soft:#17301f; --warn:#e0a253; --warn-soft:#2e2314;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 16px 48px}
+  header{margin-bottom:22px}
+  .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+  h1{font-size:clamp(22px,4.4vw,30px);line-height:1.2;margin:0 0 8px;letter-spacing:-.02em}
+  .sub{margin:0;color:var(--muted);font-size:15px;max-width:56ch}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px}
+  .lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    font-weight:600;margin:0 0 10px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input[type=range]{width:100%;accent-color:var(--accent);margin:14px 0 4px}
+  .htval{font-size:26px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .unit{background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;
+    padding:4px 12px;font-size:12px;cursor:pointer;font-family:inherit}
+  .unit:hover{color:var(--ink)}
+  .uses{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+  .use{background:none;border:1px solid var(--line);color:var(--ink);border-radius:9px;
+    padding:11px 12px;text-align:left;cursor:pointer;font-family:inherit;font-size:14px;line-height:1.3}
+  .use span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+  .use[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft)}
+  .result{border-color:var(--accent)}
+  .big{font-size:clamp(40px,10vw,58px);font-weight:650;letter-spacing:-.03em;line-height:1;
+    font-variant-numeric:tabular-nums}
+  .big small{font-size:.36em;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:6px}
+  .note{display:flex;gap:9px;font-size:14px;margin-top:12px;padding:11px 13px;border-radius:8px;
+    background:var(--accent-soft);color:var(--ink)}
+  .note.warn{background:var(--warn-soft)}
+  .note b{font-weight:600}
+  .mark{margin-top:14px;padding:13px;border:1px dashed var(--line);border-radius:8px;font-size:14px}
+  .tblwrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:420px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  tr[data-hit=true] td{background:var(--accent-soft);font-weight:600}
+  footer{margin-top:26px;font-size:14px;color:var(--muted)}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Open source · no sign-up · runs in your browser</p>
+    <h1>Exercise Ball Size Finder</h1>
+    <p class="sub">Enter your height and how you'll use the ball. You get the diameter to buy and the
+      wall-tape mark to inflate to, which is the step most people skip.</p>
+  </header>
+
+  <div class="card">
+    <p class="lbl">1 · Your height</p>
+    <div class="row">
+      <span class="htval" id="htval">5'7"</span>
+      <button class="unit" id="unit" type="button">Switch to cm</button>
+    </div>
+    <input type="range" id="ht" min="120" max="215" value="170" aria-label="Height in centimetres">
+  </div>
+
+  <div class="card">
+    <p class="lbl">2 · How you'll use it</p>
+    <div class="uses" id="uses">
+      <button class="use" type="button" data-use="core" aria-pressed="true">Core &amp; strength
+        <span>Crunches, planks, wall squats</span></button>
+      <button class="use" type="button" data-use="desk" aria-pressed="false">Desk chair
+        <span>Sitting for long stretches</span></button>
+      <button class="use" type="button" data-use="birth" aria-pressed="false">Pregnancy &amp; birthing
+        <span>Sitting, rocking, labour</span></button>
+      <button class="use" type="button" data-use="physio" aria-pressed="false">Physio &amp; balance
+        <span>Rehab and stability work</span></button>
+    </div>
+  </div>
+
+  <div class="card result">
+    <p class="lbl">Your recommended ball</p>
+    <div class="big"><span id="size">65</span>cm<small id="inches">25.6 in</small></div>
+    <div id="notes"></div>
+    <div class="mark">
+      <b>Inflate to the tape, not to feel.</b> Put a strip of tape on a wall at
+      <b id="mark">65 cm (25.6 in)</b> and pump until the top of the ball reaches it. Spread it over
+      two or three sessions in 24 hours so the material stretches evenly, then top it up after a week.
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="lbl">Standard size chart</p>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Ball</th><th>Height</th><th>Typical use</th></tr></thead>
+        <tbody id="chart"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    A trimmed-down version of the
+    <a href="https://ballholder.com/exercise-ball-size-finder/">full Exercise Ball Size Finder</a>,
+    which adds a to-scale sit-test figure, burst-rating guidance by body weight and a size ladder you
+    can tap through. Sizing bands follow the charts published by the major manufacturers.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var BANDS = [
+    {cm:45, lo:0,   hi:154, ft:'Under 5\'1"',  use:'Kids, petite adults'},
+    {cm:55, lo:155, hi:167, ft:'5\'1" – 5\'6"', use:'Most women, physio'},
+    {cm:65, lo:168, hi:184, ft:'5\'6" – 6\'0"', use:'Most men, the gym standard'},
+    {cm:75, lo:185, hi:202, ft:'6\'1" – 6\'7"', use:'Tall users, birthing, desks'},
+    {cm:85, lo:203, hi:999, ft:'6\'8" and up',  use:'Very tall users'}
+  ];
+  var ht = document.getElementById('ht'), metric = false, useCase = 'core';
+
+  BANDS.forEach(function(b){
+    var tr = document.createElement('tr');
+    tr.dataset.cm = b.cm;
+    tr.innerHTML = '<td>' + b.cm + ' cm</td><td>' + b.ft + '</td><td>' + b.use + '</td>';
+    document.getElementById('chart').appendChild(tr);
+  });
+
+  function toFt(cm){
+    var t = Math.round(cm / 2.54), f = Math.floor(t / 12);
+    return f + "'" + (t % 12) + '"';
+  }
+
+  function render(){
+    var cm = +ht.value;
+    var i = 0;
+    while (i < BANDS.length - 1 && cm > BANDS[i].hi) i++;
+    var base = i, bumped = false;
+
+    // Desk and birthing use both want hips a touch above the knees, so sit the
+    // user up a size when they are already in the top half of their band.
+    if (useCase === 'desk' || useCase === 'birth') {
+      var b = BANDS[i];
+      var mid = (Math.max(b.lo, 140) + Math.min(b.hi, 210)) / 2;
+      if (cm > mid && i < BANDS.length - 1) { i++; bumped = true; }
+    }
+
+    var pick = BANDS[i], inches = (pick.cm / 2.54).toFixed(1) + ' in';
+    document.getElementById('size').textContent = pick.cm;
+    document.getElementById('inches').textContent = inches;
+    document.getElementById('mark').textContent = pick.cm + ' cm (' + inches + ')';
+    document.getElementById('htval').textContent = metric ? cm + ' cm' : toFt(cm);
+
+    var notes = [];
+    if (bumped) {
+      notes.push(['warn', 'Sized up to ' + pick.cm + ' cm.', 'You are in the top half of the ' +
+        BANDS[base].cm + ' cm band, and a ball loses 3 to 5 cm under sustained sitting. The larger ' +
+        'ball keeps your hips level with or just above your knees.']);
+    }
+    var bb = BANDS[base];
+    var nearLow  = base > 0 && cm - bb.lo < 3;
+    var nearHigh = base < BANDS.length - 1 && bb.hi - cm < 3;
+    if (!bumped && (nearLow || nearHigh)) {
+      notes.push(['warn', 'You are on the line between two sizes.',
+        'Long legs for your height, or planning to sit on it for hours? Take the larger ball. ' +
+        'Shorter legs, or you want a harder core challenge? Take the smaller one.']);
+    }
+    notes.push(['ok', 'The 10 second sit test.', 'Sit on the fully inflated ball with your feet flat ' +
+      'and hip-width apart. Thighs parallel to the floor and hips level with your knees means the ' +
+      'size is right. Knees above hips means it is too small, or under-inflated.']);
+    if (useCase === 'birth') {
+      notes.push(['ok', 'Buy anti-burst for a birthing ball.',
+        'Look for a stated burst rating, not just a weight limit. Anything without one is a toy.']);
+    }
+
+    document.getElementById('notes').innerHTML = notes.map(function(n){
+      return '<div class="note' + (n[0] === 'warn' ? ' warn' : '') + '"><div><b>' + n[1] +
+             '</b> ' + n[2] + '</div></div>';
+    }).join('');
+
+    Array.prototype.forEach.call(document.querySelectorAll('#chart tr'), function(tr){
+      tr.dataset.hit = (+tr.dataset.cm === BANDS[base].cm);
+    });
+  }
+
+  ht.addEventListener('input', render);
+
+  document.getElementById('unit').addEventListener('click', function(){
+    metric = !metric;
+    this.textContent = metric ? 'Switch to ft / in' : 'Switch to cm';
+    render();
+  });
+
+  document.getElementById('uses').addEventListener('click', function(e){
+    var btn = e.target.closest('.use');
+    if (!btn) return;
+    useCase = btn.dataset.use;
+    Array.prototype.forEach.call(this.querySelectorAll('.use'), function(b){
+      b.setAttribute('aria-pressed', b === btn);
+    });
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
